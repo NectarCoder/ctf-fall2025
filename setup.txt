@@ -1,0 +1,19 @@
+wget https://github.com/CTFd/CTFd/archive/master.zip
+unzip master.zip
+mv CTFd-master CTFd
+vi /etc/apk/repositories
+#uncomment 3rd repository
+vi /etc/profile
+add following to the end of profile:
+-----------------
+IP=$(ifconfig eth0 | grep "inet addr" | cut -d: -f2 | cut -d" " -f1)
+export PS1='\h:\u@'$IP'!\w\$ '
+-----------------
+apk add docker
+apk add docker-compose
+service docker start
+rc-update add docker
+cd CTFd
+docker-compose up
+root:P@$$W0rd
+sysadmin:P@ssW0rd

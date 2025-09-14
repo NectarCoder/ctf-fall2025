@@ -1,0 +1,765 @@
+<div role="tabpanel" class="tab-pane config-section active" id="team-assembly">
+	<label>
+		Team Assembly
+		<small class="form-text text-muted">Given the CTF results, group the team members according to their score</small>
+	</label>
+	<br>
+
+	<button onclick="computeTeamAssembly()" class="btn btn-md btn-info">Compute Team Assembly</button>
+	<label for="numGroupsInput" style='display:inline' class='ml-3'>Groups</label>
+	<input id='numGroupsInput' value='2' type='number' class='form-control' style='width:50px;padding:0 0px;display:inline;text-align:center'/>
+	<button onclick="computeInitialRoleAssignment()" class="btn btn-md btn-info float-right">Compute Initial Role Assignment</button>
+	<br>
+	<label class="btn">
+		<input id='enableIN' type="checkbox" checked> IN
+	</label>
+	<label class="btn">
+		<input id='enableDE' type="checkbox" checked> DE
+	</label>
+	<label class="btn">
+		<input id='enableAN' type="checkbox" checked> AN
+	</label>
+	<label class="btn">
+		<input id='enableIM' type="checkbox" checked> IM
+	</label>
+	<label class="btn">
+		<input id='enableTE' type="checkbox" checked> TE
+	</label>
+	<label class="btn">
+		<input id='enableCO' type="checkbox" checked> CO
+	</label>
+	<label class="btn">
+		<input id='enableX1' type="checkbox">
+	</label>
+	<label class="btn">
+		<input id='enableX2' type="checkbox">
+	</label>
+	<label class="btn">
+		<input id='enableX3' type="checkbox">
+	</label>
+	<label class="btn">
+		<input id='enableX4' type="checkbox">
+	</label>
+	<label class="btn">
+		<input id='enableX5' type="checkbox">
+	</label>
+	<br>
+	<div id='outputDiv' class='p-3 bg-light' style='border-radius: 10px; border: 1px solid #000; width: 100%; min-height: 100px'></div>
+	<hr>
+	<div id='outputDiv2' class='p-3 bg-light' style='border-radius: 10px; border: 1px solid #000; width: 100%; min-height: 100px'></div>
+	<hr>
+	<button onclick="bruteForceTeamAssembly()" class="btn btn-md btn-info">Brute Force Team Assembly</button>
+	<!--
+		<label for="numGroupsInput" style='display:inline' class='ml-3'>Value function</label>
+		<input id='numGroupsInput' value='a+b' type='text' class='form-control' style='display: inline; width: 50%'/>
+	-->
+	<br>
+	<br>
+	<div id='outputDiv3' class='p-3 bg-light' style='border-radius: 10px; border: 1px solid #000; width: 100%; min-height: 100px'></div>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+</div>
+
+<!-- Cybersecurity lab: For the Hungarian Algorithm -->
+<script>
+	// From: https://raw.githubusercontent.com/addaleax/munkres-js/master/munkres.js
+	var MAX_SIZE=parseInt(Number.MAX_SAFE_INTEGER/2)||(1<<26)*(1<<26),DEFAULT_PAD_VALUE=0;function Munkres(){this.C=null,this.row_covered=[],this.col_covered=[],this.n=0,this.Z0_r=0,this.Z0_c=0,this.marked=null,this.path=null}function make_cost_matrix(t,r){var e,i;if(!r){var s=-1/0;for(e=0;e<t.length;++e)for(i=0;i<t[e].length;++i)t[e][i]>s&&(s=t[e][i]);r=function(t){return s-t}}var n=[];for(e=0;e<t.length;++e){var o=t[e];for(n[e]=[],i=0;i<o.length;++i)n[e][i]=r(t[e][i])}return n}function format_matrix(t){var r,e,i=[];for(r=0;r<t.length;++r)for(e=0;e<t[r].length;++e){var s=String(t[r][e]).length;(!i[e]||s>=i[e])&&(i[e]=s)}var n="";for(r=0;r<t.length;++r){for(e=0;e<t[r].length;++e){for(var o=String(t[r][e]);o.length<i[e];)o=" "+o;n+=o,e!=t[r].length-1&&(n+=" ")}r!=t[r].length-1&&(n+="\n")}return n}function computeMunkres(t,r){return(new Munkres).compute(t,r)}Munkres.prototype.pad_matrix=function(t,r){r=r||DEFAULT_PAD_VALUE;var e,i=0,s=t.length;for(e=0;e<s;++e)t[e].length>i&&(i=t[e].length);s=i>s?i:s;var n=[];for(e=0;e<s;++e){for(var o=(t[e]||[]).slice();s>o.length;)o.push(r);n.push(o)}return n},Munkres.prototype.compute=function(t,r){(r=r||{}).padValue=r.padValue||DEFAULT_PAD_VALUE,this.C=this.pad_matrix(t,r.padValue),this.n=this.C.length,this.original_length=t.length,this.original_width=t[0].length;for(var e=[];e.length<this.n;)e.push(!1);this.row_covered=e.slice(),this.col_covered=e.slice(),this.Z0_r=0,this.Z0_c=0,this.path=this.__make_matrix(2*this.n,0),this.marked=this.__make_matrix(this.n,0);for(var i=1,s={1:this.__step1,2:this.__step2,3:this.__step3,4:this.__step4,5:this.__step5,6:this.__step6};;){var n=s[i];if(!n)break;i=n.apply(this)}for(var o=[],h=0;h<this.original_length;++h)for(var _=0;_<this.original_width;++_)1==this.marked[h][_]&&o.push([h,_]);return o},Munkres.prototype.__make_matrix=function(t,r){for(var e=[],i=0;i<t;++i){e[i]=[];for(var s=0;s<t;++s)e[i][s]=r}return e},Munkres.prototype.__step1=function(){for(var t=0;t<this.n;++t)for(var r=Math.min.apply(Math,this.C[t]),e=0;e<this.n;++e)this.C[t][e]-=r;return 2},Munkres.prototype.__step2=function(){for(var t=0;t<this.n;++t)for(var r=0;r<this.n;++r)if(0===this.C[t][r]&&!this.col_covered[r]&&!this.row_covered[t]){this.marked[t][r]=1,this.col_covered[r]=!0,this.row_covered[t]=!0;break}return this.__clear_covers(),3},Munkres.prototype.__step3=function(){for(var t=0,r=0;r<this.n;++r)for(var e=0;e<this.n;++e)1==this.marked[r][e]&&0==this.col_covered[e]&&(this.col_covered[e]=!0,++t);return t>=this.n?7:4},Munkres.prototype.__step4=function(){for(var t=-1,r=-1,e=-1;;){var i=this.__find_a_zero();if(t=i[0],r=i[1],t<0)return 6;if(this.marked[t][r]=2,!((e=this.__find_star_in_row(t))>=0))return this.Z0_r=t,this.Z0_c=r,5;r=e,this.row_covered[t]=!0,this.col_covered[r]=!1}},Munkres.prototype.__step5=function(){var t=0;this.path[t][0]=this.Z0_r,this.path[t][1]=this.Z0_c;for(var r=!1;!r;){var e=this.__find_star_in_col(this.path[t][1]);if(e>=0?(t++,this.path[t][0]=e,this.path[t][1]=this.path[t-1][1]):r=!0,!r){var i=this.__find_prime_in_row(this.path[t][0]);t++,this.path[t][0]=this.path[t-1][0],this.path[t][1]=i}}return this.__convert_path(this.path,t),this.__clear_covers(),this.__erase_primes(),3},Munkres.prototype.__step6=function(){for(var t=this.__find_smallest(),r=0;r<this.n;++r)for(var e=0;e<this.n;++e)this.row_covered[r]&&(this.C[r][e]+=t),this.col_covered[e]||(this.C[r][e]-=t);return 4},Munkres.prototype.__find_smallest=function(){for(var t=MAX_SIZE,r=0;r<this.n;++r)for(var e=0;e<this.n;++e)this.row_covered[r]||this.col_covered[e]||t>this.C[r][e]&&(t=this.C[r][e]);return t},Munkres.prototype.__find_a_zero=function(){for(var t=0;t<this.n;++t)for(var r=0;r<this.n;++r)if(0===this.C[t][r]&&!this.row_covered[t]&&!this.col_covered[r])return[t,r];return[-1,-1]},Munkres.prototype.__find_star_in_row=function(t){for(var r=0;r<this.n;++r)if(1==this.marked[t][r])return r;return-1},Munkres.prototype.__find_star_in_col=function(t){for(var r=0;r<this.n;++r)if(1==this.marked[r][t])return r;return-1},Munkres.prototype.__find_prime_in_row=function(t){for(var r=0;r<this.n;++r)if(2==this.marked[t][r])return r;return-1},Munkres.prototype.__convert_path=function(t,r){for(var e=0;e<=r;++e)this.marked[t[e][0]][t[e][1]]=1==this.marked[t[e][0]][t[e][1]]?0:1},Munkres.prototype.__clear_covers=function(){for(var t=0;t<this.n;++t)this.row_covered[t]=!1,this.col_covered[t]=!1},Munkres.prototype.__erase_primes=function(){for(var t=0;t<this.n;++t)for(var r=0;r<this.n;++r)2==this.marked[t][r]&&(this.marked[t][r]=0)},computeMunkres.version="1.2.2",computeMunkres.format_matrix=format_matrix,computeMunkres.make_cost_matrix=make_cost_matrix,computeMunkres.Munkres=Munkres,"undefined"!=typeof module&&module.exports&&(module.exports=computeMunkres);
+</script>
+
+<script>
+	let output = document.getElementById('outputDiv');
+	let output2 = document.getElementById('outputDiv2');
+	let output3 = document.getElementById('outputDiv3');
+	let matrixRowLabels = [];
+	let matrixColumnLabels = []
+	let groups = [];
+	let groupMatrices = [];
+	let groupMatricesInverted = [];
+	
+
+	// Cybersecurity Lab
+	function computeTeamAssembly() {
+		scoreboardPromise = CTFd.api.get_scoreboard_detail({count: 1000000000});
+		setTimeout(scoreboardPromiseResolver, 100, scoreboardPromise);
+	}
+
+	function bruteForceTeamAssembly() {
+		scoreboardPromise = CTFd.api.get_scoreboard_detail({count: 1000000000});
+		setTimeout(scoreboardPromiseResolver, 100, scoreboardPromise, true);
+	}
+
+	function _bruteForceTeamAssembly(matrix) {
+		let numGroups = document.getElementById('numGroupsInput').value;
+		let outputGroupData = [];
+		//if(numGroups != 2) {
+		//	alert('Brute forcing only supports groups = 2.');
+		//	return;
+		//}
+		let numValues = numGroups ** matrix.length;
+		let valueCharPad = '000000000000000000000000000000000000';
+		let valueCharMap = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+		let html = '';
+		let _groups = null;
+
+		bestScore = 0;
+		bestGroups = null;
+		bestSolutions = null;
+		bestPermutation = '';
+
+		html += '<textarea style="width:100%; height: 300px;">';
+
+		for(let value = 0; value < numValues; value++) {
+			let permutation = valueCharPad + value.toString(numGroups);
+			permutation = permutation.substring(permutation.length - matrix.length);
+
+			//let numOnes = 0, numZeros = 0;
+			let histogram = [];
+			for(var i = 0; i < numGroups; i++) histogram[i] = 0;
+			for(var c of permutation) {
+				var index = valueCharMap.indexOf(c);
+				histogram[index]++;
+			}
+			if(Math.max(...histogram) - Math.min(...histogram) > 1) continue;
+			// Ensure that we only consider the balanced permutations
+			//if(Math.abs(numOnes - numZeros) > 1) continue; // Only look at balanced
+
+			
+
+			html += 'Permutation = ' + permutation;
+			_groups = [];
+			for(var temp = 0; temp < numGroups; temp++) _groups.push([]);
+			
+			for(let playerIndex = 0; playerIndex < permutation.length; playerIndex++) {
+				let playerScores = matrix[playerIndex];
+				let groupAssignment = valueCharMap.indexOf(permutation[playerIndex]);
+				if(groupAssignment < 0) throw "groupAssignment index less than 0";
+
+				_groups[groupAssignment].push(playerScores);
+			}
+
+			var outputGroupDataEntry = {
+				permutation: permutation,
+				group: [],
+				sumOfHungarianScores: 0
+			};
+
+			for(var groupIterator in _groups) {
+				var groupMatrix = _groups[groupIterator];
+				
+				var outputGroupDataEntryEntry = {
+					playerMin: Infinity,
+					playerMax: 0,
+					playerAvg: 0,
+					hungarianScore: 0,
+					playerVals: [],
+					playerValStr: ''
+				}
+
+				for(var playerRow of groupMatrix) {
+					let playerSum = playerRow.reduce((a, b) => a + b, 0);
+
+					if(playerSum > outputGroupDataEntryEntry.playerMax) outputGroupDataEntryEntry.playerMax = playerSum;
+					if(playerSum < outputGroupDataEntryEntry.playerMin) outputGroupDataEntryEntry.playerMin = playerSum;
+					outputGroupDataEntryEntry.playerAvg += playerSum;
+					outputGroupDataEntryEntry.playerVals.push(playerSum); 
+					outputGroupDataEntryEntry.playerValStr += playerSum.toString() + ' ';
+				}
+				outputGroupDataEntryEntry.playerAvg /= numGroups;
+
+				outputGroupDataEntry.group.push(outputGroupDataEntryEntry);
+			}
+			//html += _groups[0] + '<br>'
+			//html += _groups[1] + '<br>'
+
+			/// Extract optimal score blah
+			var output = valueFunction(_groups, outputGroupDataEntry);
+			var score = output.value;
+			var solutions = output.solutions;
+
+			outputGroupDataEntry.sumOfHungarianScores = score;
+
+			if(score > bestScore) {
+				bestGroup = _groups;
+				bestScore = score;
+				bestSolutions = solutions;
+				bestPermutation = permutation;
+			}
+			html += ', Score = ' + score + ', Best score: ' + bestScore + '\n';
+			//html += '<hr>';
+			//if(value >= 30) break;
+
+			outputGroupData.push(outputGroupDataEntry);
+		}
+
+		html += '</textarea>';
+
+		html += '<hr><h5>Best score: ' + bestScore + '<br>';
+		html += 'Best player-group mapping permutation: ' + bestPermutation + '</h5>';
+		
+		
+		for(var i = 0; i < bestGroup.length; i++) {
+			var matrix = bestGroup[i];
+			
+
+			//html += 'Group ' + (i + 1) + ':<br>';
+			html += '<hr><h4>Group ' + (parseInt(i) + 1) + ' solution:</h4>';
+			var group = [];
+			for(var j in bestPermutation) { // Generate the group index mapping from the permutation
+				if(bestPermutation[j] == i) group.push(j);
+			}
+			var solution = bestSolutions[i];
+			console.log(solution)
+			for(var j in solution) {
+				var player = group[j];
+				var playerName = matrixRowLabels[player];
+				var item = solution[j];
+				html += 'Player <span class="badge badge-secondary">' + player + ' (' + playerName + ')</span> &rarr; Category <span class="badge badge-secondary">' + item[1] + ' (' + matrixColumnLabels[item[1]] + ')</span><br>';
+			}
+			html += '<table style="text-align:center" class="table table-sm"><tbody>';
+			for(var j in matrix) {
+				var row = matrix[j];
+				html += '<tr>';
+				for(var k in row) {
+					var category_points = row[k];
+					//html += '<td>' + category_points + '</td>';
+
+
+					var solution_row = solution[j] || [null, null];
+					var solution_player = solution_row[0];
+					var solution_category = solution_row[1];
+					//////////////////////////////
+					if(solution_player == j && k == solution_category) {
+						html += '<td class="p-0 bg-info text-white p-2" style="border-radius:100000px"" style="width: 100px"><b>' + category_points + '</b></td>';
+					} else {
+						html += '<td style="width: 100px">' + category_points + '</td>';
+					}
+				}
+				html += '<tr>';
+			}
+			html += '</tbody></table>';
+		}
+
+		var line = '';
+		line += 'Permutation,';
+		line += 'Permutation Number,';
+		for(var groupIndex = 0; groupIndex < numGroups; groupIndex++) {
+			line += 'Group ' + (groupIndex + 1) + ' Player Maximum,';
+			line += 'Group ' + (groupIndex + 1) + ' Player Minimum,';
+			line += 'Group ' + (groupIndex + 1) + ' Player Average,';
+			line += 'Group ' + (groupIndex + 1) + ' Standard Deviation,';
+			line += 'Group ' + (groupIndex + 1) + ' Variance,';
+			line += 'Group ' + (groupIndex + 1) + ' Hungarian Score,';
+			line += 'Group ' + (groupIndex + 1) + ' Player Raw Data,';
+		}
+		line += 'Sum of Hungarian Scores,';
+		line += '\\n';
+
+		for(var entry of outputGroupData) {
+			line += entry.permutation + ',';
+			line += parseInt(entry.permutation, numGroups) + ',';
+
+			for(var group of entry.group) {
+
+				line += group.playerMax + ',';
+				line += group.playerMin + ',';
+				line += group.playerAvg + ',';
+				line += standardDeviation(group.playerVals).toString() + ',';
+				line += variance(group.playerVals).toString() + ',';
+				line += group.hungarianScore + ','
+				line += group.playerValStr.trim() + ',';
+
+			}
+			line += entry.sumOfHungarianScores + ',';
+			line += '\\n';
+		}
+
+		html = '<button onclick="download(\'teamAssemblyData.csv\', \'' + line + '\')" class="btn btn-md btn-secondary w-100">Download Brute Force Table</button>' + html;
+
+		output3.innerHTML = html;
+	}
+
+	function download(filename, text) {
+		var element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
+		element.style.display = 'none';
+		document.body.appendChild(element);
+		element.click();
+		document.body.removeChild(element);
+	}
+
+	function standardDeviation(arr){
+		// Creating the mean with Array.reduce
+		let mean = arr.reduce((acc, curr)=>{
+			return acc + curr
+		}, 0) / arr.length;
+		// Assigning (value - mean) ^ 2 to every array item
+		arr = arr.map((k)=>{
+			return (k - mean) ** 2
+		})
+		// Calculating the sum of updated array
+		let sum = arr.reduce((acc, curr)=> acc + curr, 0);
+		// Calculating the variance
+		let variance = sum / arr.length
+		// Returning the Standered deviation
+		return Math.sqrt(sum / arr.length)
+	}
+
+	function variance(arr = []) {
+		if(!arr.length){
+			return 0;
+		};
+		const sum = arr.reduce((acc, val) => acc + val);
+		const { length: num } = arr;
+		const median = sum / num;
+		let variance = 0;
+		arr.forEach(num => {
+			variance += ((num - median) * (num - median));
+		});
+		variance /= num;
+		return variance;
+	}
+
+	function _computeTeamAssembly(matrix) {
+		groupMatrices = [];
+		groupMatricesInverted = [];
+
+		let numGroups = document.getElementById('numGroupsInput').value;
+
+		let html = '';
+
+		html += '<div>';
+		html += '<i>Matrix columns: </i><b>' + matrixColumnLabels.join(', ') + '</b><br>';
+		html += '<i>Matrix rows: </i><b>' + matrixRowLabels.join(', ') + '</b>';
+		html += '</div><br>';
+		
+		html += '<table style="text-align:center" class="table table-sm"><tbody>';
+		for(var row of matrix) {
+			html += '<tr>';
+			for(var category_points of row) {
+				html += '<td>' + category_points + '</td>';
+			}
+			html += '<tr>';
+		}
+		html += '</tbody></table>';
+
+		html += '<hr>';
+
+		groups = [];
+		for(var i = 0; i < numGroups; i++) groups.push([]);
+
+		let matrix_sum = [];
+		for(var row of matrix) matrix_sum.push(row.reduce((a, b) => a + b));
+
+		let matrix_sum_sorted = matrix_sum.slice();
+		for(var i in matrix_sum_sorted) matrix_sum_sorted[i] = [i, matrix_sum_sorted[i]];
+		matrix_sum_sorted.sort((a, b) => {
+          return (b[1] > a[1]) - (b[1] < a[1]);
+        });
+
+		html += 'Sum matrix: <b>[ (' + matrix_sum_sorted.join('), (') + ') ]</b><br>';
+		
+		let iterator = 0, iteratorState = true, iteratorStateChange = false;
+		for(var i = 0; i < matrix_sum.length; i++) {
+			var selection = matrix_sum_sorted.shift();
+			groups[iterator].push(selection[0]);
+			html += 'Group ' + (iterator + 1) + ' selected <span class="badge badge-secondary">' + selection[0] + ' (' + matrixRowLabels[selection[0]] + ')' + '</span>, remaining IDs: (' + matrix_sum_sorted.join('), (') + ')<br>';
+
+			// 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0 ...
+			if(!iteratorStateChange) {
+				if(iteratorState) iterator++;
+				else iterator--;
+				iterator = Math.min(Math.max(0, iterator), numGroups - 1)
+
+				if(iterator <= 0 || iterator >= numGroups - 1) {
+					iteratorState = !iteratorState;
+					iteratorStateChange = true;
+				}
+			} else iteratorStateChange = false;
+		}
+		html += '<hr>';
+		for(var i = 0; i < numGroups; i++) {
+			group_matrix = [];
+			html += 'Group ' + (i + 1) + ': ';
+			for(var member of groups[i]) {
+				group_matrix.push(matrix[member]);
+				
+				html += '<span class="badge badge-secondary ml-1" style="font-size:1em">' + member + ' (' + matrixRowLabels[member] + ')</span>';
+			}
+
+			var groupMatrix = [];
+			var groupMatrixInverted = [];
+
+			html += '<table style="text-align:center" class="table table-sm mt-1"><tbody>';
+			for(var row of group_matrix) {
+				var groupRow = [];
+				var groupRowInverted = [];
+
+				html += '<tr>';
+				for(var category_points of row) {
+					// 500 is the maximum, so interting it because the Hungarian algorithm minimizes
+					groupRow.push(category_points);
+					groupRowInverted.push(500 - category_points);
+
+					html += '<td>' + category_points + '</td>';
+				}
+				html += '<tr>';
+
+				groupMatrix.push(groupRow);
+				groupMatrixInverted.push(groupRowInverted);
+			}
+			html += '</tbody></table>';
+
+			groupMatrices.push(groupMatrix);
+			groupMatricesInverted.push(groupMatrixInverted);
+
+
+			html += '<hr>';
+		}
+		output.innerHTML = html;
+	}
+
+	function scoreboardPromiseResolver(scoreboardPromise, useBruteForce = false) {
+		if(scoreboardPromise.inspect().state == 'fulfilled') {
+			var matrix = [];
+			matrixRowLabels = [];
+			matrixColumnLabels = [];
+
+			var response = scoreboardPromise.valueOf().data;
+        	var response_keys = Object.keys(response);
+			for(var key of response_keys) {
+            	var user = response[key];
+				var histogram = getUserSolvesHistogram(user);
+				var row = [];
+				for(var category in histogram) {
+					row.push(histogram[category]);
+				}
+
+				matrixRowLabels.push(user.name);
+				matrix.push(row);
+
+				if(matrixColumnLabels.length == 0) {
+					matrixColumnLabels = Object.keys(histogram).map(x => x.substring(0, 2).toUpperCase());
+				}
+			}
+
+			if(useBruteForce) _bruteForceTeamAssembly(matrix);
+			else _computeTeamAssembly(matrix);
+		} else {
+			setTimeout(scoreboardPromiseResolver, 100, scoreboardPromise, useBruteForce);
+		}
+	}
+
+	// Cybersecurity Lab
+	let challengesList = { // ID: [Name, Value, Category]
+		2: ['Incident Response Actions', '60', 'Design'],
+		5: ['Our Program Name', '10', 'Investigation'],
+		9: ['Program Review', '20', 'Testing and Evaluation'],
+		12: ['Flag in a Flag System', '70', 'Analysis'],
+		16: ['We are being attacked!', '42', 'Analysis'],
+		18: ['Hope it\'s not a Backdoor', '25', 'Analysis'],
+		19: ['Further Attack 1', '40', 'Analysis'],
+		20: ['Further Attack 2', '40', 'Analysis'],
+		21: ['A File Was Stolen', '45', 'Analysis'],
+		23: ['Encoded Message', '25', 'Analysis'],
+		24: ['Mystery JavaScript 2', '55', 'Testing and Evaluation'],
+		26: ['Hardware Encryption', '60', 'Implementation'],
+		29: ['Determining User Inputs', '60', 'Implementation'],
+		30: ['Prisoner\'s Dilemma', '90', 'Design'],
+		32: ['Cryptocurrency Audit', '70', 'Analysis'],
+		33: ['Mystery JavaScript 1', '50', 'Testing and Evaluation'],
+		34: ['Steganography 1', '40', 'Analysis'],
+		35: ['Name the Attack 1', '23', 'Investigation'],
+		36: ['Name the Attack 2', '24', 'Investigation'],
+		37: ['Name the Attack 3', '24', 'Investigation'],
+		38: ['Name the Attack 4', '26', 'Investigation'],
+		39: ['Name the Attack 5', '26', 'Investigation'],
+		40: ['Name the Attack 6', '26', 'Investigation'],
+		41: ['Name the Attack 7', '26', 'Investigation'],
+		42: ['Name this Software 1', '24', 'Investigation'],
+		43: ['Name this Software 2', '24', 'Investigation'],
+		44: ['Name this Software 3', '24', 'Investigation'],
+		45: ['Name this Software 4', '24', 'Investigation'],
+		46: ['Name this Software 5', '24', 'Investigation'],
+		47: ['Name this Software 6', '26', 'Investigation'],
+		48: ['Name this Software 7', '24', 'Investigation'],
+		49: ['Incident Response Ordering', '50', 'Design'],
+		50: ['Risk Management ROI', '10', 'Analysis'],
+		51: ['If you know, you know', '28', 'Testing and Evaluation'],
+		52: ['Lightning Show', '70', 'Analysis'],
+		53: ['Read The Story Scenario', '5', 'Introduction'],
+		54: ['Regular Expressions 1', '30', 'Testing and Evaluation'],
+		55: ['Regular Expressions 2', '33', 'Testing and Evaluation'],
+		56: ['Breakout Room 1', '60', 'Coordination'],
+		57: ['Breakout Room 2', '60', 'Coordination'],
+		58: ['Coordination XOR 1', '34', 'Coordination'],
+		59: ['Coordination XOR 2', '34', 'Coordination'],
+		60: ['Coordination XOR 3', '34', 'Coordination'],
+		61: ['Coordination XOR 4', '34', 'Coordination'],
+		62: ['Coordination XOR 5', '34', 'Coordination'],
+		63: ['Reverse Image Search', '100', 'Investigation'],
+		64: ['Coordination XOR 6', '34', 'Coordination'],
+		65: ['Coordination XOR 7', '34', 'Coordination'],
+		66: ['Coordination XOR 8', '34', 'Coordination'],
+		67: ['Linux Basics 1', '20', 'Implementation'],
+		68: ['Linux Basics 2', '20', 'Implementation'],
+		69: ['Linux Basics 3', '20', 'Implementation'],
+		70: ['Linux Basics 4', '20', 'Implementation'],
+		71: ['Linux Basics 5', '20', 'Implementation'],
+		73: ['Linux Basics 6', '35', 'Implementation'],
+		74: ['Linux Basics 7', '21', 'Implementation'],
+		75: ['Simple Testing Server', '26', 'Testing and Evaluation'],
+		76: ['Linux Basics 8', '21', 'Implementation'],
+		77: ['Windows Basics 1', '20', 'Implementation'],
+		78: ['Windows Basics 2', '21', 'Implementation'],
+		79: ['Windows Basics 3', '21', 'Implementation'],
+		80: ['Windows Basics 4', '21', 'Implementation'],
+		81: ['Windows Basics 5', '21', 'Implementation'],
+		82: ['Firewall 1', '26', 'Design'],
+		83: ['Firewall 2', '26', 'Design'],
+		84: ['Windows Basics 6', '21', 'Implementation'],
+		85: ['Windows Basics 7', '21', 'Implementation'],
+		87: ['Windows Basics 8', '35', 'Implementation'],
+		88: ['Draw Your Favorite Animal', '50', 'Design'],
+		89: ['Firewall 3', '26', 'Design'],
+		90: ['Remove the Hacker', '60', 'Design'],
+		91: ['Firewall 4', '25', 'Design'],
+		92: ['Firewall 5', '24', 'Testing and Evaluation'],
+		93: ['Historical Event', '45', 'Investigation'],
+		94: ['Networking 1', '24', 'Testing and Evaluation'],
+		95: ['Linux Basics 9', '24', 'Testing and Evaluation'],
+		96: ['Vulnerability Test 1', '22', 'Implementation'],
+		97: ['Vulnerability Test 2', '24', 'Testing and Evaluation'],
+		98: ['Vulnerability Test 3', '24', 'Testing and Evaluation'],
+		99: ['Vulnerability Test 4', '24', 'Testing and Evaluation'],
+		101: ['Networking 2', '24', 'Testing and Evaluation'],
+		102: ['Vulnerability Test 5', '23', 'Analysis'],
+		103: ['Draw a Lock', '40', 'Design'],
+		104: ['Introduction', '5', 'Introduction'],
+		105: ['System Development Life Cycle', '22', 'Design'],
+		106: ['Steganography 2', '25', 'Design'],
+		107: ['Regular Expressions 3', '40', 'Testing and Evaluation'],
+		108: ['Regular Expressions 4', '50', 'Testing and Evaluation'],
+		109: ['Preliminary Information 1', '5', 'Introduction'],
+		110: ['Preliminary Information 2', '5', 'Introduction'],
+		112: ['Coordination using Zoom Chat', '8', 'Coordination'],
+		113: ['Birthday Month 1', '50', 'Coordination'],
+		114: ['Birthday Month 2', '50', 'Coordination']
+	}
+
+	function getUserSolvesHistogram(user) {
+		//let categoryHistogram = {'Investigation': 0, 'Design': 0, 'Analysis': 0, 'Implementation': 0, 'Testing and Evaluation': 0, 'Coordination': 0};
+		
+		let categoryHistogram = {};
+		if(document.getElementById('enableIN').checked) categoryHistogram['Investigation'] = 0;
+		if(document.getElementById('enableDE').checked) categoryHistogram['Design'] = 0;
+		if(document.getElementById('enableAN').checked) categoryHistogram['Analysis'] = 0;
+		if(document.getElementById('enableIM').checked) categoryHistogram['Implementation'] = 0;
+		if(document.getElementById('enableTE').checked) categoryHistogram['Testing and Evaluation'] = 0;
+		if(document.getElementById('enableCO').checked) categoryHistogram['Coordination'] = 0;
+		if(document.getElementById('enableX1').checked) categoryHistogram['X1'] = 0;
+		if(document.getElementById('enableX2').checked) categoryHistogram['X2'] = 0;
+		if(document.getElementById('enableX3').checked) categoryHistogram['X3'] = 0;
+		if(document.getElementById('enableX4').checked) categoryHistogram['X4'] = 0;
+		if(document.getElementById('enableX5').checked) categoryHistogram['X5'] = 0;
+		
+		for(let solve of user.solves) {
+			let indexedItem = challengesList[solve.challenge_id];
+			if(indexedItem === undefined) {
+				//console.log('Cannot find challenge "' + solve.challenge_id + '", skipping.');
+				continue;
+			}
+			if(categoryHistogram[indexedItem[2]] === undefined) {
+				// Ignore all other categories that are not predefined (like Introduction)
+				// categoryHistogram[indexedItem[2]] = 1;
+			} else {
+				categoryHistogram[indexedItem[2]] += parseInt(indexedItem[1]);
+			}
+		}
+		return categoryHistogram;
+	}
+
+	function computeInitialRoleAssignment() {
+		if(groupMatrices.length == 0) {
+			output2.innerHTML = 'Error: Please compute the team assembly first.';
+			return;
+		}
+
+		var html = '';
+		for(var i in groupMatricesInverted) {
+			var matrixInverted = groupMatricesInverted[i];
+			html += 'Group ' + (parseInt(i) + 1) + ' inverted matrix:<br>';
+
+			html += '<table style="text-align:center" class="table table-sm table-dark"><tbody>';
+			for(var row of matrixInverted) {
+
+				html += '<tr>';
+				for(var category_points of row) {
+					html += '<td>' + category_points + '</td>';
+				}
+				html += '<tr>';
+			}
+			html += '</tbody></table>';
+			html += '<hr>';
+		}
+
+		html += 'Running the Hungarian algorithm...<br>';
+		for(var i in groupMatricesInverted) { // Group
+			var group = groups[i];
+			var matrix = groupMatrices[i];
+			var matrixInverted = groupMatricesInverted[i];
+			html += '<hr><h4>Group ' + (parseInt(i) + 1) + ' solution:</h4>';
+
+			var solution = computeSolutionWithHungarianAlgorithm(matrixInverted);
+			for(var j in solution) {
+				var player = group[j];
+				var playerName = matrixRowLabels[player];
+				var item = solution[j];
+				html += 'Player <span class="badge badge-secondary">' + player + ' (' + playerName + ')</span> &rarr; Category <span class="badge badge-secondary">' + item[1] + ' (' + matrixColumnLabels[item[1]] + ')</span><br>';
+			}
+			html += '<br><table style="text-align:center" class="table table-sm"><tbody>';
+			for(var j in matrix) { // Player
+				var player = group[j];
+				var playerName = matrixRowLabels[player];
+
+				var row = matrix[j];
+				html += '<tr>';
+				for(var k in row) { // Category
+					var solution_row = solution[j] || [null, null];
+					var solution_player = solution_row[0];
+					var solution_category = solution_row[1];
+					var category_points = row[k];
+					if(solution_player == j && k == solution_category) {
+						html += '<td class="p-0 bg-info text-white p-2" style="border-radius:100000px"" style="width: 100px"><b>' + category_points + '</b></td>';
+					} else {
+						html += '<td style="width: 100px">' + category_points + '</td>';
+					}
+				}
+				html += '<tr>';
+			}
+
+			html += '</tbody></table>';
+		}
+		html += '<br><button onclick="bruteForceInitialRoleAssignment()" class="btn btn-md btn-info float-right">Brute Force Initial Role Assignment</button>';
+		html += '<hr>'
+		output2.innerHTML = html;
+	}
+
+	function bruteForceInitialRoleAssignment() {
+		var html = '';
+		const permutator = (inputArr) => {
+			let result = [];
+			const permute = (arr, m = []) => {
+				if (arr.length === 0) {
+					result.push(m)
+				} else {
+					for (let i = 0; i < arr.length; i++) {
+						let curr = arr.slice();
+						let next = curr.splice(i, 1);
+						permute(curr.slice(), m.concat(next))
+					}
+				}
+			}
+			permute(inputArr)
+			return result;
+		}
+
+		for(var groupIndex in groupMatrices) {
+			let matrix = groupMatrices[groupIndex];
+			
+			let temp = [];
+			for(var i = 0; i < matrixColumnLabels.length; i++) {
+				temp.push(i);
+			}
+
+			let maxScore = 0;
+			let maxAssignment = [];
+
+			let permutations = permutator(temp);
+			for(var assignment of permutations) {
+				var score = 0;
+				for(var i in groups[groupIndex]) {
+					var player = parseInt(groups[groupIndex][i]);
+					var playerAssignment = assignment[i % assignment.length];
+					console.log(player, matrix)
+					score += matrix[i][playerAssignment];
+				}
+				if(score > maxScore) {
+					maxScore = score;
+					maxAssignment = assignment;
+				}
+			}
+			
+			html += '<h4>Optimal assignment for group ' + (parseInt(groupIndex) + 1) + ':</h4>';
+
+
+			for(var i in groups[groupIndex]) {
+				var player = parseInt(groups[groupIndex][i]);
+				var playerName = matrixRowLabels[player];
+				var playerAssignment = maxAssignment[i % maxAssignment.length];
+				//html += 'Player ' + player + ' --> Category ' + playerAssignment
+				////////!!!!!!!!!!!!!!!!!!!!!!
+
+				html += 'Player <span class="badge badge-secondary">' + player + ' (' + playerName + ')</span> &rarr; Category <span class="badge badge-secondary">' + playerAssignment + ' (' + matrixColumnLabels[playerAssignment] + ')</span><br>';
+			}
+			html += '<hr>';
+		}
+
+		if(output2.innerHTML.startsWith('Group ')) output2.innerHTML += html;
+		else output2.innerHTML = html;
+	}
+
+	function valueFunction(groupMatrix, outputGroupDataEntry) {
+		var totalScore = 0;
+		var solutions = [];
+		for(var i = 0; i < groupMatrix.length; i++) {
+			var matrix = groupMatrix[i];
+			if(matrix.length == 0) continue;
+			var output = getMunkresScore(matrix);
+			var value = output.value;
+			var solution = output.solution;
+			solutions.push(solution);
+			totalScore += value;
+
+			outputGroupDataEntry.group[i].hungarianScore = value;
+		}
+		return {value: totalScore, solutions: solutions};
+	}
+
+	function getMunkresScore(matrix) {
+		// Invert the matrix
+		let matrixInverted = [];
+		for(var i = 0; i < matrix.length; i++) {
+			matrixInverted.push([]);
+			for(var j = 0; j < matrix[i].length; j++) {
+				matrixInverted[i].push(500 - matrix[i][j]);
+			}
+		}
+
+		var sumPoints = 0;
+		var solution = computeSolutionWithHungarianAlgorithm(matrixInverted);
+		for(var j in solution) {
+			var solution_row = solution[j] || [null, null];
+			
+			var solution_player = solution_row[0];
+			var solution_category = solution_row[1];
+			var points = matrix[solution_player][solution_category];
+
+			sumPoints += points;
+		}
+		return {value: sumPoints, solution: solution};
+	}
+
+	function computeSolutionWithHungarianAlgorithm(matrix) {
+		var m = new Munkres();
+		var indices = m.compute(matrix);
+		return indices;
+	}
+</script>
